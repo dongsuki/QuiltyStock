@@ -255,7 +255,7 @@ def main():
     
     # 숫자 포맷 정리 (소수점 2자리)
     for col in df_upload.columns:
-        if col not in ['Rank', 'Code', 'Name'] and df_upload[col].dtype in ['float64', 'float32']:
+        if col not in ['순위', '종목코드', '종목명'] and df_upload[col].dtype in ['float64', 'float32']:
             df_upload[col] = df_upload[col].round(2)
     
     print(f"✓ 최종 컬럼 수: {len(upload_cols)}개")
