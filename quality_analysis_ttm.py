@@ -381,7 +381,7 @@ if __name__ == "__main__":
         # ---------------------------------------------------------
         # STEP 5. 결과 확인
         # ---------------------------------------------------------
-        result_cols = ['Name', 'Code', 'Is_Financial', 'Quality_Score', 
+        result_cols = ['Code', 'Is_Financial', 'Quality_Score', 
                        'Profitability_Score', 'Stability_Score', 'Capital_Score', 'Improvement_Score', 'Accounting_Score']
         
         print("\n[전체 종목 분석 완료!]")
