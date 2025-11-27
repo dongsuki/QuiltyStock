@@ -7,9 +7,12 @@ __pycache__/
 env/
 venv/
 
-# Data files (keep only final results)
+# Result files (generated daily, not tracked)
 *.csv
-!quality_analysis_all.csv
+*.txt
+!requirements.txt
+!SETUP_GUIDE.md
+!README.md
 
 # Logs
 *.log
