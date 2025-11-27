@@ -71,8 +71,12 @@ def upload_to_sheets(spreadsheet_id, df, sheet_name='Analysis'):
         print(f"⚠ 데이터 삭제 중 오류 (무시 가능): {e}")
     
     # 3. 새 데이터 업로드
+    # JSON은 NaN/Infinity를 지원하지 않으므로 None으로 변환
+    import numpy as np
+    df_clean = df.replace([np.inf, -np.inf, np.nan], None)
+    
     # 헤더 + 데이터
-    values = [df.columns.tolist()] + df.values.tolist()
+    values = [df_clean.columns.tolist()] + df_clean.values.tolist()
     
     body = {
         'values': values
