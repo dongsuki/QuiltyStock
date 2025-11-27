@@ -23,41 +23,54 @@ def get_credentials():
     credentials = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
     return credentials
 
-def upload_to_sheets(spreadsheet_id, df, sheet_name):
+def upload_to_sheets(spreadsheet_id, df, sheet_name='Analysis'):
     """
-    데이터프레임을 구글 시트에 업로드
+    데이터프레임을 구글 시트에 업로드 (덮어쓰기)
     
     Args:
         spreadsheet_id: 구글 시트 ID
         df: 업로드할 데이터프레임
-        sheet_name: 시트 탭 이름 (예: "2025-11-27")
+        sheet_name: 시트 탭 이름 (기본: 'Analysis')
     """
     credentials = get_credentials()
     service = build('sheets', 'v4', credentials=credentials)
     
-    # 1. 새 시트 탭 생성 (이미 있으면 무시)
+    # 1. 기존 시트가 있는지 확인
     try:
-        request_body = {
-            'requests': [{
-                'addSheet': {
-                    'properties': {
-                        'title': sheet_name
-                    }
-                }
-            }]
-        }
-        service.spreadsheets().batchUpdate(
-            spreadsheetId=spreadsheet_id,
-            body=request_body
-        ).execute()
-        print(f"✓ 새 시트 생성: {sheet_name}")
-    except Exception as e:
-        if 'already exists' in str(e):
+        sheet_metadata = service.spreadsheets().get(spreadsheetId=spreadsheet_id).execute()
+        sheets = sheet_metadata.get('sheets', [])
+        
+        # 첫 번째 시트 사용 (또는 'Analysis' 시트 찾기)
+        target_sheet = None
+        for sheet in sheets:
+            if sheet['properties']['title'] == sheet_name:
+                target_sheet = sheet
+                break
+        
+        if not target_sheet:
+            # 'Analysis' 시트가 없으면 첫 번째 시트 사용
+            target_sheet = sheets[0]
+            sheet_name = target_sheet['properties']['title']
             print(f"✓ 기존 시트 사용: {sheet_name}")
         else:
-            raise
+            print(f"✓ '{sheet_name}' 시트 발견")
+            
+    except Exception as e:
+        print(f"⚠ 시트 확인 오류: {e}")
+        sheet_name = 'Sheet1'  # Fallback
     
-    # 2. 데이터 업로드
+    # 2. 기존 데이터 전체 삭제 (A1부터 모든 내용)
+    try:
+        clear_request = service.spreadsheets().values().clear(
+            spreadsheetId=spreadsheet_id,
+            range=f"{sheet_name}!A1:ZZ100000",  # 충분히 큰 범위
+            body={}
+        ).execute()
+        print(f"✓ 기존 데이터 삭제 완료")
+    except Exception as e:
+        print(f"⚠ 데이터 삭제 중 오류 (무시 가능): {e}")
+    
+    # 3. 새 데이터 업로드
     # 헤더 + 데이터
     values = [df.columns.tolist()] + df.values.tolist()
     
@@ -247,9 +260,8 @@ def main():
     
     print(f"✓ 최종 컬럼 수: {len(upload_cols)}개")
     
-    # 오늘 날짜로 시트 이름 생성
-    today = datetime.now().strftime("%Y-%m-%d")
-    sheet_name = f"Analysis_{today}"
+    # 고정된 시트 이름 사용 (날짜별 탭 생성하지 않음)
+    sheet_name = 'Analysis'
     
     # 업로드 실행
     upload_to_sheets(spreadsheet_id, df_upload, sheet_name)
@@ -258,6 +270,7 @@ def main():
     print(f"✓ 업로드 완료!")
     print(f"  종목 수: {len(df_upload)}개")
     print(f"  시트명: {sheet_name}")
+    print(f"  업데이트 시간: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print(f"  URL: https://docs.google.com/spreadsheets/d/{spreadsheet_id}")
     print("=" * 60)
 
