@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+
+# Data files (keep only final results)
+*.csv
+!quality_analysis_all.csv
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Google credentials (중요! 절대 commit 금지)
+credentials.json
+token.json
+*-credentials.json

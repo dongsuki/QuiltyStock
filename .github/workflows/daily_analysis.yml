@@ -1,0 +1,45 @@
+name: Daily Stock Quality Analysis
+
+on:
+  schedule:
+    # 매일 오전 9시 (KST = UTC+9, 즉 UTC 0시)
+    - cron: '0 0 * * *'
+  workflow_dispatch:  # 수동 실행 가능
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Install dependencies
+      run: |
+        pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Run quality analysis
+      run: |
+        python quality_analysis_ttm.py
+    
+    - name: Upload to Google Sheets
+      env:
+        GOOGLE_SHEETS_CREDENTIALS: ${{ secrets.GOOGLE_SHEETS_CREDENTIALS }}
+        GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
+      run: |
+        python upload_to_sheets.py
+    
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: analysis-results
+        path: |
+          quality_analysis_all.csv
+          quality_analysis_full_list.txt
+        retention-days: 30
